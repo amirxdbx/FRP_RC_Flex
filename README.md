@@ -37,7 +37,7 @@ pip install -r requirements.txt
 ## Run the Streamlit App
 
 ```bash
-streamlit run app/app_streamlit.py
+streamlit run streamlit_app.py
 ```
 
 ## Run the FastAPI Service
@@ -64,11 +64,17 @@ python -m app.predict_cli --input sample_input.csv --output predictions.csv
 
 Best for a quick interactive demo.
 
-Entry point:
+Main file:
 
 ```text
-app/app_streamlit.py
+streamlit_app.py
 ```
+
+Recommended Streamlit Community Cloud settings:
+
+- Repository: `amirxdbx/FRP_RC_Flex`
+- Branch: `main`
+- Main file path: `streamlit_app.py`
 
 ### Option 2: Render or Railway with FastAPI
 
@@ -76,17 +82,28 @@ Better if you want a stable API that can later be consumed by Streamlit, a custo
 
 This repo already includes `render.yaml` for Render deployment.
 
-## GitHub Push
+Recommended Render settings:
 
-After creating a GitHub repository, run:
+- Service type: `Web Service`
+- Environment: `Python`
+- Build command: `pip install -r requirements.txt`
+- Start command: `uvicorn app.app_fastapi:app --host 0.0.0.0 --port $PORT`
 
-```bash
-git init
-git add .
-git commit -m "Add FRP-RC PINN predictor app"
-git branch -M main
-git remote add origin <YOUR_REPO_URL>
-git push -u origin main
+After deployment, the API docs will be available at:
+
+```text
+https://<your-render-service>.onrender.com/docs
 ```
 
-If you want me to push it for you from this machine, send the repository URL and make sure GitHub authentication is available here.
+## Files Added For Deployment
+
+- `streamlit_app.py`: root-level Streamlit entry point for Streamlit Cloud
+- `.streamlit/config.toml`: Streamlit app configuration
+- `runtime.txt`: Python version pin for cloud deployments
+- `render.yaml`: Render service definition for the FastAPI API
+
+## Notes
+
+- The bundled model artifact is `artifacts/best_pinn_phys.pth`.
+- The reconstructed normalization statistics are stored in `artifacts/model_metadata.json`.
+- If you later want a cleaner public-facing UI, keep FastAPI as the backend and put Streamlit or a custom frontend on top of it.

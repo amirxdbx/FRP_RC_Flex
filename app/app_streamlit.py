@@ -187,18 +187,6 @@ def render_section_svg(
 
 predictor = load_predictor()
 
-with st.sidebar:
-    st.header("Required Inputs")
-    st.markdown(
-        "- `b_mm`: beam width in mm\n"
-        "- `d_mm`: effective depth in mm\n"
-        "- `fc_MPa`: concrete compressive strength in MPa\n"
-        "- `Af_mm2`: FRP reinforcement area in mm²\n"
-        "- or define reinforcement by bar count and bar diameter\n"
-        "- `Ef_GPa`: FRP elastic modulus in GPa\n"
-        "- `ffu_MPa`: FRP tensile strength in MPa"
-    )
-
 tab_single, tab_batch = st.tabs(["Single Prediction", "Batch CSV"])
 
 with tab_single:
@@ -331,7 +319,7 @@ with tab_single:
             ]
         )[0]
 
-    preview_col, notes_col = preview_shell.columns([1.15, 1.0], gap="medium")
+    preview_col, _ = preview_shell.columns([1.15, 1.0], gap="medium")
     with preview_col:
         components.html(
             render_section_svg(
@@ -344,19 +332,6 @@ with tab_single:
             ),
             height=320,
         )
-    with notes_col:
-        st.markdown('<div class="summary-card">', unsafe_allow_html=True)
-        st.subheader("Section Summary")
-        st.write(f"Beam width `b`: {b_mm:.1f} mm")
-        st.write(f"Effective depth `d`: {d_mm:.1f} mm")
-        st.write(f"Concrete strength `f_c`: {fc_MPa:.1f} MPa")
-        st.write(f"FRP modulus `E_f`: {Ef_GPa:.1f} GPa")
-        st.write(f"FRP tensile strength `f_fu`: {ffu_MPa:.1f} MPa")
-        st.write(f"Reinforcement area `Af`: {Af_mm2:.2f} mm²")
-        st.write(f"Reinforcement input: {af_mode}")
-        st.write(f"Bars shown: {n_bars}")
-        st.write(f"Bar diameter: {bar_diameter_mm:.2f} mm")
-        st.markdown("</div>", unsafe_allow_html=True)
 
     result = st.session_state.get("single_prediction_result")
     if result is not None:

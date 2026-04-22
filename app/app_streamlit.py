@@ -190,7 +190,7 @@ predictor = load_predictor()
 tab_single, tab_batch = st.tabs(["Single Prediction", "Batch CSV"])
 
 with tab_single:
-    input_col, preview_shell = st.columns([1, 0.9], gap="large")
+    input_col, preview_shell = st.columns([1, 0.8], gap="large")
 
     with input_col:
         st.markdown('<div class="section-label">Geometry</div>', unsafe_allow_html=True)

@@ -198,10 +198,11 @@ with tab_single:
             '<p class="section-note">Define the beam cross-section used by the predictor.</p>',
             unsafe_allow_html=True,
         )
+        st.latex(r"\text{Geometry:}\quad b,\ d")
         g1, g2 = st.columns(2)
         with g1:
             b_mm = st.number_input(
-                "Beam width, b (mm)",
+                r"Beam width, $b$ (mm)",
                 min_value=1.0,
                 value=DEFAULT_INPUTS["b_mm"],
                 step=1.0,
@@ -209,7 +210,7 @@ with tab_single:
             )
         with g2:
             d_mm = st.number_input(
-                "Effective depth, d (mm)",
+                r"Effective depth, $d$ (mm)",
                 min_value=1.0,
                 value=DEFAULT_INPUTS["d_mm"],
                 step=1.0,
@@ -221,6 +222,7 @@ with tab_single:
             '<p class="section-note">Provide FRP area directly or derive it from bar count and bar diameter.</p>',
             unsafe_allow_html=True,
         )
+        st.latex(r"A_f = n \cdot \frac{\pi \phi^2}{4}")
         af_mode = st.radio(
             "Reinforcement input mode",
             options=["Direct Af", "Bar count + diameter"],
@@ -232,7 +234,7 @@ with tab_single:
             r1, r2 = st.columns([1.25, 1.0])
             with r1:
                 Af_mm2 = st.number_input(
-                    "FRP reinforcement area, Af (mm²)",
+                    r"FRP area, $A_f$ (mm²)",
                     min_value=1.0,
                     value=DEFAULT_INPUTS["Af_mm2"],
                     step=1.0,
@@ -256,7 +258,7 @@ with tab_single:
             with r1:
                 n_bars = int(
                     st.number_input(
-                        "Number of bars",
+                        r"Bar count, $n$",
                         min_value=1,
                         max_value=12,
                         value=DEFAULT_INPUTS["n_bars"],
@@ -265,38 +267,39 @@ with tab_single:
                 )
             with r2:
                 bar_diameter_mm = st.number_input(
-                    "Bar diameter (mm)",
+                    r"Bar diameter, $\phi$ (mm)",
                     min_value=1.0,
                     value=DEFAULT_INPUTS["bar_diameter_mm"],
                     step=0.1,
                 )
             Af_mm2 = area_from_bar_layout(n_bars, bar_diameter_mm)
             with r3:
-                st.metric("Computed Af", f"{Af_mm2:.2f} mm²")
+                st.metric(r"Computed $A_f$", f"{Af_mm2:.2f} mm²")
 
         st.markdown('<div class="section-label">Material Properties</div>', unsafe_allow_html=True)
         st.markdown(
             '<p class="section-note">Specify the concrete and FRP mechanical properties.</p>',
             unsafe_allow_html=True,
         )
+        st.latex(r"\text{Material inputs:}\quad f'_c,\ E_f,\ f_{fu}")
         m1, m2, m3 = st.columns(3)
         with m1:
             fc_MPa = st.number_input(
-                "Concrete strength, f'c (MPa)",
+                r"Concrete strength, $f'_c$ (MPa)",
                 min_value=1.0,
                 value=DEFAULT_INPUTS["fc_MPa"],
                 step=0.1,
             )
         with m2:
             Ef_GPa = st.number_input(
-                "FRP modulus, Ef (GPa)",
+                r"FRP modulus, $E_f$ (GPa)",
                 min_value=1.0,
                 value=DEFAULT_INPUTS["Ef_GPa"],
                 step=0.1,
             )
         with m3:
             ffu_MPa = st.number_input(
-                "FRP tensile strength, ffu (MPa)",
+                r"FRP tensile strength, $f_{fu}$ (MPa)",
                 min_value=1.0,
                 value=DEFAULT_INPUTS["ffu_MPa"],
                 step=1.0,
@@ -336,10 +339,11 @@ with tab_single:
     if result is not None:
         st.markdown("---")
         st.markdown('<div class="section-label">Prediction Output</div>', unsafe_allow_html=True)
+        st.latex(r"\hat{M},\ p_{\mathrm{FR}},\ p_{\mathrm{CC}}")
         out1, out2, out3 = st.columns(3)
-        out1.metric("Predicted Moment", f"{result['predicted_moment_kNm']:.3f} kN·m")
+        out1.metric(r"Predicted $\hat{M}$", f"{result['predicted_moment_kNm']:.3f} kN·m")
         out2.metric("Failure Mode", result["predicted_failure_mode"])
-        out3.metric("FR Probability", f"{result['p_fr']:.3f}")
+        out3.metric(r"$p_{\mathrm{FR}}$", f"{result['p_fr']:.3f}")
 
         st.subheader("Detailed Outputs")
         st.dataframe(pd.DataFrame([result]), use_container_width=True)

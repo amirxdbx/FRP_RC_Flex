@@ -334,19 +334,18 @@ with tab_single:
             ),
             height=320,
         )
+        result = st.session_state.get("single_prediction_result")
+        if result is not None:
+            st.markdown("---")
+            st.markdown('<div class="section-label">Prediction Output</div>', unsafe_allow_html=True)
+            st.latex(r"\hat{M},\ p_{\mathrm{FR}},\ p_{\mathrm{CC}}")
+            out1, out2, out3 = st.columns(3)
+            out1.metric(r"Predicted $\hat{M}$", f"{result['predicted_moment_kNm']:.3f} kN·m")
+            out2.metric("Failure Mode", result["predicted_failure_mode"])
+            out3.metric(r"$p_{\mathrm{FR}}$", f"{result['p_fr']:.3f}")
 
-    result = st.session_state.get("single_prediction_result")
-    if result is not None:
-        st.markdown("---")
-        st.markdown('<div class="section-label">Prediction Output</div>', unsafe_allow_html=True)
-        st.latex(r"\hat{M},\ p_{\mathrm{FR}},\ p_{\mathrm{CC}}")
-        out1, out2, out3 = st.columns(3)
-        out1.metric(r"Predicted $\hat{M}$", f"{result['predicted_moment_kNm']:.3f} kN·m")
-        out2.metric("Failure Mode", result["predicted_failure_mode"])
-        out3.metric(r"$p_{\mathrm{FR}}$", f"{result['p_fr']:.3f}")
-
-        st.subheader("Detailed Outputs")
-        st.dataframe(pd.DataFrame([result]), use_container_width=True)
+            st.subheader("Detailed Outputs")
+            st.dataframe(pd.DataFrame([result]), use_container_width=True)
 
 with tab_batch:
     st.write(

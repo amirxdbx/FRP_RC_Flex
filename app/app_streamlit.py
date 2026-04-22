@@ -110,8 +110,8 @@ def render_section_svg(
     af_mm2: float,
     mode_label: str,
 ) -> str:
-    width = 550*1.25
-    height = 375*1.25
+    width = 550
+    height = 375*
     margin_x = 70
     margin_y = 28
     max_section_w = 400
@@ -190,7 +190,7 @@ predictor = load_predictor()
 tab_single, tab_batch = st.tabs(["Single Prediction", "Batch CSV"])
 
 with tab_single:
-    input_col, preview_shell = st.columns([0.95, 1.15], gap="large")
+    input_col, preview_shell = st.columns([1, 0.9], gap="large")
 
     with input_col:
         st.markdown('<div class="section-label">Geometry</div>', unsafe_allow_html=True)

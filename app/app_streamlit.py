@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import sys
 from pathlib import Path
 
@@ -23,6 +24,9 @@ DEFAULT_INPUTS = {
     "d_mm": 254.0,
     "fc_MPa": 39.6,
     "Af_mm2": 393.0,
+    "n_bars": 4,
+    "bar_diameter_mm": 11.2,
+    "viz_bars_direct": 4,
     "Ef_GPa": 48.7,
     "ffu_MPa": 995.0,
 }
@@ -31,6 +35,87 @@ DEFAULT_INPUTS = {
 @st.cache_resource
 def load_predictor():
     return get_predictor()
+
+
+def area_from_bar_layout(n_bars: int, bar_diameter_mm: float) -> float:
+    return n_bars * math.pi * (bar_diameter_mm ** 2) / 4.0
+
+
+def equivalent_bar_diameter(af_mm2: float, n_bars: int) -> float:
+    return math.sqrt((4.0 * af_mm2) / (max(n_bars, 1) * math.pi))
+
+
+def render_section_svg(
+    b_mm: float,
+    d_mm: float,
+    n_bars: int,
+    bar_diameter_mm: float,
+    af_mm2: float,
+    mode_label: str,
+) -> str:
+    width = 440
+    height = 320
+    margin_x = 70
+    margin_y = 32
+    section_w = 300
+    section_h = 220
+    x0 = margin_x
+    y0 = margin_y
+    y_bars = y0 + section_h - 26
+
+    max_bar_px = 16
+    scaled_bar_r = max(5, min(max_bar_px, 0.45 * bar_diameter_mm))
+
+    if n_bars == 1:
+        centers = [x0 + section_w / 2]
+    else:
+        left = x0 + 28
+        right = x0 + section_w - 28
+        spacing = (right - left) / (n_bars - 1)
+        centers = [left + i * spacing for i in range(n_bars)]
+
+    circles = "\n".join(
+        f"<circle cx='{cx:.1f}' cy='{y_bars:.1f}' r='{scaled_bar_r:.1f}' "
+        "fill='#0B6E4F' stroke='#083D31' stroke-width='2' />"
+        for cx in centers
+    )
+
+    return f"""
+    <svg viewBox="0 0 {width} {height}" width="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="{width}" height="{height}" fill="#F7FAF8" rx="18"/>
+      <rect x="{x0}" y="{y0}" width="{section_w}" height="{section_h}" rx="8"
+            fill="#D9D9D9" stroke="#4A4A4A" stroke-width="3"/>
+      {circles}
+
+      <line x1="{x0}" y1="{y0 + section_h + 18}" x2="{x0 + section_w}" y2="{y0 + section_h + 18}"
+            stroke="#111111" stroke-width="2"/>
+      <line x1="{x0}" y1="{y0 + section_h + 10}" x2="{x0}" y2="{y0 + section_h + 26}"
+            stroke="#111111" stroke-width="2"/>
+      <line x1="{x0 + section_w}" y1="{y0 + section_h + 10}" x2="{x0 + section_w}" y2="{y0 + section_h + 26}"
+            stroke="#111111" stroke-width="2"/>
+      <text x="{x0 + section_w / 2}" y="{y0 + section_h + 42}" text-anchor="middle"
+            font-size="16" fill="#111111">b = {b_mm:.1f} mm</text>
+
+      <line x1="{x0 + section_w + 22}" y1="{y0}" x2="{x0 + section_w + 22}" y2="{y0 + section_h}"
+            stroke="#111111" stroke-width="2"/>
+      <line x1="{x0 + section_w + 14}" y1="{y0}" x2="{x0 + section_w + 30}" y2="{y0}"
+            stroke="#111111" stroke-width="2"/>
+      <line x1="{x0 + section_w + 14}" y1="{y0 + section_h}" x2="{x0 + section_w + 30}" y2="{y0 + section_h}"
+            stroke="#111111" stroke-width="2"/>
+      <text x="{x0 + section_w + 38}" y="{y0 + section_h / 2}" font-size="16" fill="#111111"
+            transform="rotate(90 {x0 + section_w + 38} {y0 + section_h / 2})" text-anchor="middle">
+        d = {d_mm:.1f} mm
+      </text>
+
+      <text x="{x0}" y="22" font-size="18" font-weight="700" fill="#0B6E4F">Section Preview</text>
+      <text x="{x0}" y="{y0 + section_h + 70}" font-size="15" fill="#333333">
+        Reinforcement input: {mode_label}
+      </text>
+      <text x="{x0}" y="{y0 + section_h + 92}" font-size="15" fill="#333333">
+        n = {n_bars}, d_bar = {bar_diameter_mm:.2f} mm, Af = {af_mm2:.2f} mm²
+      </text>
+    </svg>
+    """
 
 
 predictor = load_predictor()
@@ -42,6 +127,7 @@ with st.sidebar:
         "- `d_mm`: effective depth in mm\n"
         "- `fc_MPa`: concrete compressive strength in MPa\n"
         "- `Af_mm2`: FRP reinforcement area in mm²\n"
+        "- or define reinforcement by bar count and bar diameter\n"
         "- `Ef_GPa`: FRP elastic modulus in GPa\n"
         "- `ffu_MPa`: FRP tensile strength in MPa"
     )
@@ -55,10 +141,70 @@ with tab_single:
         d_mm = st.number_input("d_mm", min_value=1.0, value=DEFAULT_INPUTS["d_mm"], step=1.0)
     with col2:
         fc_MPa = st.number_input("fc_MPa", min_value=1.0, value=DEFAULT_INPUTS["fc_MPa"], step=0.1)
-        Af_mm2 = st.number_input("Af_mm2", min_value=1.0, value=DEFAULT_INPUTS["Af_mm2"], step=1.0)
+        af_mode = st.radio(
+            "Reinforcement input",
+            options=["Direct Af", "Bar count + diameter"],
+            horizontal=False,
+        )
+
+        if af_mode == "Direct Af":
+            Af_mm2 = st.number_input("Af_mm2", min_value=1.0, value=DEFAULT_INPUTS["Af_mm2"], step=1.0)
+            viz_bars_direct = st.number_input(
+                "Bars for graphic",
+                min_value=1,
+                max_value=12,
+                value=DEFAULT_INPUTS["viz_bars_direct"],
+                step=1,
+                help="Used only to draw an equivalent section graphic when Af is entered directly.",
+            )
+            n_bars = int(viz_bars_direct)
+            bar_diameter_mm = equivalent_bar_diameter(Af_mm2, n_bars)
+            st.caption(
+                f"Equivalent graphic only: {n_bars} bars of {bar_diameter_mm:.2f} mm gives Af ≈ {Af_mm2:.2f} mm²."
+            )
+        else:
+            n_bars = int(
+                st.number_input(
+                    "Number of bars",
+                    min_value=1,
+                    max_value=12,
+                    value=DEFAULT_INPUTS["n_bars"],
+                    step=1,
+                )
+            )
+            bar_diameter_mm = st.number_input(
+                "Bar diameter (mm)",
+                min_value=1.0,
+                value=DEFAULT_INPUTS["bar_diameter_mm"],
+                step=0.1,
+            )
+            Af_mm2 = area_from_bar_layout(n_bars, bar_diameter_mm)
+            st.metric("Computed Af (mm²)", f"{Af_mm2:.2f}")
     with col3:
         Ef_GPa = st.number_input("Ef_GPa", min_value=1.0, value=DEFAULT_INPUTS["Ef_GPa"], step=0.1)
         ffu_MPa = st.number_input("ffu_MPa", min_value=1.0, value=DEFAULT_INPUTS["ffu_MPa"], step=1.0)
+
+    preview_col, notes_col = st.columns([1.35, 1.0])
+    with preview_col:
+        st.markdown(
+            render_section_svg(
+                b_mm=b_mm,
+                d_mm=d_mm,
+                n_bars=n_bars,
+                bar_diameter_mm=bar_diameter_mm,
+                af_mm2=Af_mm2,
+                mode_label=af_mode,
+            ),
+            unsafe_allow_html=True,
+        )
+    with notes_col:
+        st.subheader("Section Summary")
+        st.write(f"Beam width `b`: {b_mm:.1f} mm")
+        st.write(f"Effective depth `d`: {d_mm:.1f} mm")
+        st.write(f"Concrete strength `f_c`: {fc_MPa:.1f} MPa")
+        st.write(f"FRP modulus `E_f`: {Ef_GPa:.1f} GPa")
+        st.write(f"FRP tensile strength `f_fu`: {ffu_MPa:.1f} MPa")
+        st.write(f"Reinforcement area `Af`: {Af_mm2:.2f} mm²")
 
     if st.button("Predict", type="primary"):
         result = predictor.predict_records(
@@ -83,10 +229,15 @@ with tab_single:
         st.dataframe(pd.DataFrame([result]), use_container_width=True)
 
 with tab_batch:
-    st.write("Upload a CSV with columns: `b_mm,d_mm,fc_MPa,Af_mm2,Ef_GPa,ffu_MPa`.")
+    st.write(
+        "Upload a CSV with columns `b_mm,d_mm,fc_MPa,Af_mm2,Ef_GPa,ffu_MPa` "
+        "or with `n_bars` and `bar_diameter_mm`; the app will compute `Af_mm2` automatically."
+    )
     uploaded = st.file_uploader("CSV file", type=["csv"])
     if uploaded is not None:
         df = pd.read_csv(uploaded)
+        if {"n_bars", "bar_diameter_mm"}.issubset(df.columns) and "Af_mm2" not in df.columns:
+            df["Af_mm2"] = area_from_bar_layout(df["n_bars"], df["bar_diameter_mm"])
         st.subheader("Input Preview")
         st.dataframe(df.head(), use_container_width=True)
 

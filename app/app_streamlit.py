@@ -111,7 +111,7 @@ def render_section_svg(
     mode_label: str,
 ) -> str:
     width = 550
-    height = 375*
+    height = 375
     margin_x = 70
     margin_y = 28
     max_section_w = 400

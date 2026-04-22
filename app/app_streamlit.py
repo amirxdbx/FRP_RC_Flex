@@ -58,9 +58,16 @@ def render_section_svg(
     height = 300
     margin_x = 56
     margin_y = 22
-    section_w = 320
-    section_h = 232
-    x0 = margin_x
+    max_section_w = 320
+    max_section_h = 232
+
+    # Scale the sketch to the actual b:d proportion instead of forcing
+    # every section into the same rectangle.
+    scale = min(max_section_w / b_mm, max_section_h / d_mm)
+    section_w = b_mm * scale
+    section_h = d_mm * scale
+
+    x0 = margin_x + (max_section_w - section_w) / 2
     y0 = margin_y
     cover = 24
     stirrup_inset = 18
@@ -114,6 +121,10 @@ def render_section_svg(
       {circles}
       <line x1="{x0 + cover}" y1="{y_bars}" x2="{x0 + section_w - cover}" y2="{y_bars}"
             stroke="#7C7468" stroke-width="2" stroke-dasharray="5 5" opacity="0.55"/>
+      <text x="{x0 + section_w / 2:.1f}" y="{y0 + section_h + 28:.1f}"
+            text-anchor="middle" font-size="13" fill="#666666">
+        scaled to b:d = {b_mm:.0f}:{d_mm:.0f}
+      </text>
     </svg>
     """
 

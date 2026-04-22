@@ -147,7 +147,8 @@ def render_section_svg(
     )
 
     return f"""
-    <svg viewBox="0 0 {width} {height}" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 {width} {height}" width="100%" height="100%"
+         preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="concreteGrad" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stop-color="#ECE8DF"/>
@@ -182,6 +183,60 @@ def render_section_svg(
         scaled to b:d = {b_mm:.0f}:{d_mm:.0f}
       </text>
     </svg>
+    """
+
+
+def render_section_component(
+    b_mm: float,
+    d_mm: float,
+    n_bars: int,
+    bar_diameter_mm: float,
+    af_mm2: float,
+    mode_label: str,
+) -> str:
+    svg = render_section_svg(
+        b_mm=b_mm,
+        d_mm=d_mm,
+        n_bars=n_bars,
+        bar_diameter_mm=bar_diameter_mm,
+        af_mm2=af_mm2,
+        mode_label=mode_label,
+    )
+    return f"""
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <style>
+          html, body {{
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            overflow: hidden;
+          }}
+          .figure-shell {{
+            height: 100vh;
+            padding: 8px 10px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #F7FAF8;
+            border-radius: 18px;
+          }}
+          .figure-shell svg {{
+            display: block;
+            width: 100%;
+            height: 100%;
+          }}
+        </style>
+      </head>
+      <body>
+        <div class="figure-shell">
+          {svg}
+        </div>
+      </body>
+    </html>
     """
 
 
@@ -323,7 +378,7 @@ with tab_single:
 
     with preview_shell:
         components.html(
-            render_section_svg(
+            render_section_component(
                 b_mm=b_mm,
                 d_mm=d_mm,
                 n_bars=n_bars,
@@ -331,7 +386,7 @@ with tab_single:
                 af_mm2=Af_mm2,
                 mode_label=af_mode,
             ),
-            height=400,
+            height=430,
         )
         result = st.session_state.get("single_prediction_result")
         if result is not None:

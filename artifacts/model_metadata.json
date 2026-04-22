@@ -1,0 +1,52 @@
+{
+  "model_name": "frp_rc_pinn_seed42",
+  "checkpoint_name": "best_pinn_phys.pth",
+  "feature_names": [
+    "b_mm",
+    "d_mm",
+    "fc_MPa",
+    "Af_mm2",
+    "Ef_GPa",
+    "ffu_MPa"
+  ],
+  "target_name": "M_exp_over_bd",
+  "target_output_unit": "kN·m",
+  "gate_threshold": 0.5,
+  "eval_gate_mode": "soft",
+  "cd_min": 0.05,
+  "cd_max": 0.95,
+  "architecture": {
+    "h1": 48,
+    "h2": 24,
+    "gate_h1": 36,
+    "gate_h2": 18,
+    "dropout": 0.0,
+    "use_failure_head": true
+  },
+  "scalers": {
+    "mu_x": [
+      189.398882,
+      265.916759,
+      43.274302,
+      449.483799,
+      57.975698,
+      1015.474862
+    ],
+    "std_x": [
+      69.412164,
+      77.792695,
+      14.454703,
+      335.391748,
+      28.678637,
+      353.668303
+    ],
+    "mu_y": 0.001079194135,
+    "std_y": 0.000492366158
+  },
+  "source_run": {
+    "run_name": "run_20260227_134017_seed42",
+    "comparison_workbook": "outputs3/run_20260227_134017_seed42/pinn_full_comparison.xlsx",
+    "checkpoint": "outputs3/run_20260227_134017_seed42/checkpoints/best_pinn_phys.pth"
+  }
+}
+

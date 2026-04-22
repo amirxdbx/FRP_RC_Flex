@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -54,14 +55,16 @@ def render_section_svg(
     mode_label: str,
 ) -> str:
     width = 440
-    height = 320
-    margin_x = 70
-    margin_y = 32
-    section_w = 300
-    section_h = 220
+    height = 300
+    margin_x = 56
+    margin_y = 22
+    section_w = 320
+    section_h = 232
     x0 = margin_x
     y0 = margin_y
-    y_bars = y0 + section_h - 26
+    cover = 24
+    stirrup_inset = 18
+    y_bars = y0 + section_h - cover - 10
 
     max_bar_px = 16
     scaled_bar_r = max(5, min(max_bar_px, 0.45 * bar_diameter_mm))
@@ -69,51 +72,48 @@ def render_section_svg(
     if n_bars == 1:
         centers = [x0 + section_w / 2]
     else:
-        left = x0 + 28
-        right = x0 + section_w - 28
+        left = x0 + cover + scaled_bar_r + 6
+        right = x0 + section_w - cover - scaled_bar_r - 6
         spacing = (right - left) / (n_bars - 1)
         centers = [left + i * spacing for i in range(n_bars)]
 
     circles = "\n".join(
         f"<circle cx='{cx:.1f}' cy='{y_bars:.1f}' r='{scaled_bar_r:.1f}' "
-        "fill='#0B6E4F' stroke='#083D31' stroke-width='2' />"
+        "fill='#0D7A57' stroke='#064E3B' stroke-width='2.2' />"
         for cx in centers
     )
 
     return f"""
     <svg viewBox="0 0 {width} {height}" width="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="concreteGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ECE8DF"/>
+          <stop offset="100%" stop-color="#D3CEC4"/>
+        </linearGradient>
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.16"/>
+        </filter>
+        <pattern id="speckle" width="28" height="28" patternUnits="userSpaceOnUse">
+          <circle cx="6" cy="8" r="1.3" fill="#BBB3A7"/>
+          <circle cx="18" cy="10" r="1.1" fill="#B2AA9D"/>
+          <circle cx="11" cy="20" r="1.4" fill="#C2BAAF"/>
+          <circle cx="22" cy="22" r="1.0" fill="#B7B0A5"/>
+        </pattern>
+      </defs>
+
       <rect x="0" y="0" width="{width}" height="{height}" fill="#F7FAF8" rx="18"/>
-      <rect x="{x0}" y="{y0}" width="{section_w}" height="{section_h}" rx="8"
-            fill="#D9D9D9" stroke="#4A4A4A" stroke-width="3"/>
+      <rect x="{x0}" y="{y0}" width="{section_w}" height="{section_h}" rx="14"
+            fill="url(#concreteGrad)" stroke="#5F5A52" stroke-width="3.2" filter="url(#shadow)"/>
+      <rect x="{x0}" y="{y0}" width="{section_w}" height="{section_h}" rx="14"
+            fill="url(#speckle)" opacity="0.55"/>
+      <rect x="{x0 + stirrup_inset}" y="{y0 + stirrup_inset}"
+            width="{section_w - 2 * stirrup_inset}" height="{section_h - 2 * stirrup_inset}"
+            rx="10" fill="none" stroke="#8F877A" stroke-width="4"/>
+      <rect x="{x0 + 10}" y="{y0 + 10}" width="{section_w - 20}" height="{section_h * 0.26:.1f}"
+            rx="10" fill="#FFFFFF" opacity="0.16"/>
       {circles}
-
-      <line x1="{x0}" y1="{y0 + section_h + 18}" x2="{x0 + section_w}" y2="{y0 + section_h + 18}"
-            stroke="#111111" stroke-width="2"/>
-      <line x1="{x0}" y1="{y0 + section_h + 10}" x2="{x0}" y2="{y0 + section_h + 26}"
-            stroke="#111111" stroke-width="2"/>
-      <line x1="{x0 + section_w}" y1="{y0 + section_h + 10}" x2="{x0 + section_w}" y2="{y0 + section_h + 26}"
-            stroke="#111111" stroke-width="2"/>
-      <text x="{x0 + section_w / 2}" y="{y0 + section_h + 42}" text-anchor="middle"
-            font-size="16" fill="#111111">b = {b_mm:.1f} mm</text>
-
-      <line x1="{x0 + section_w + 22}" y1="{y0}" x2="{x0 + section_w + 22}" y2="{y0 + section_h}"
-            stroke="#111111" stroke-width="2"/>
-      <line x1="{x0 + section_w + 14}" y1="{y0}" x2="{x0 + section_w + 30}" y2="{y0}"
-            stroke="#111111" stroke-width="2"/>
-      <line x1="{x0 + section_w + 14}" y1="{y0 + section_h}" x2="{x0 + section_w + 30}" y2="{y0 + section_h}"
-            stroke="#111111" stroke-width="2"/>
-      <text x="{x0 + section_w + 38}" y="{y0 + section_h / 2}" font-size="16" fill="#111111"
-            transform="rotate(90 {x0 + section_w + 38} {y0 + section_h / 2})" text-anchor="middle">
-        d = {d_mm:.1f} mm
-      </text>
-
-      <text x="{x0}" y="22" font-size="18" font-weight="700" fill="#0B6E4F">Section Preview</text>
-      <text x="{x0}" y="{y0 + section_h + 70}" font-size="15" fill="#333333">
-        Reinforcement input: {mode_label}
-      </text>
-      <text x="{x0}" y="{y0 + section_h + 92}" font-size="15" fill="#333333">
-        n = {n_bars}, d_bar = {bar_diameter_mm:.2f} mm, Af = {af_mm2:.2f} mm²
-      </text>
+      <line x1="{x0 + cover}" y1="{y_bars}" x2="{x0 + section_w - cover}" y2="{y_bars}"
+            stroke="#7C7468" stroke-width="2" stroke-dasharray="5 5" opacity="0.55"/>
     </svg>
     """
 
@@ -186,7 +186,7 @@ with tab_single:
 
     preview_col, notes_col = st.columns([1.35, 1.0])
     with preview_col:
-        st.markdown(
+        components.html(
             render_section_svg(
                 b_mm=b_mm,
                 d_mm=d_mm,
@@ -195,7 +195,7 @@ with tab_single:
                 af_mm2=Af_mm2,
                 mode_label=af_mode,
             ),
-            unsafe_allow_html=True,
+            height=320,
         )
     with notes_col:
         st.subheader("Section Summary")
@@ -205,6 +205,9 @@ with tab_single:
         st.write(f"FRP modulus `E_f`: {Ef_GPa:.1f} GPa")
         st.write(f"FRP tensile strength `f_fu`: {ffu_MPa:.1f} MPa")
         st.write(f"Reinforcement area `Af`: {Af_mm2:.2f} mm²")
+        st.write(f"Reinforcement input: {af_mode}")
+        st.write(f"Bars shown: {n_bars}")
+        st.write(f"Bar diameter: {bar_diameter_mm:.2f} mm")
 
     if st.button("Predict", type="primary"):
         result = predictor.predict_records(

@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -64,6 +63,19 @@ st.markdown(
         border-radius: 16px;
         background: #f7faf8;
         border: 1px solid rgba(17, 17, 17, 0.08);
+    }
+    .section-figure-shell {
+        width: 100%;
+        padding: 0.35rem;
+        border-radius: 18px;
+        background: #f7faf8;
+        border: 1px solid rgba(17, 17, 17, 0.06);
+        line-height: 0;
+    }
+    .section-figure-shell svg {
+        display: block;
+        width: 100%;
+        height: auto;
     }
     </style>
     <div class="hero-card">
@@ -147,7 +159,8 @@ def render_section_svg(
     )
 
     return f"""
-    <svg viewBox="0 0 {width} {height}" width="100%" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 {width} {height}" preserveAspectRatio="xMidYMid meet"
+         xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="concreteGrad" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stop-color="#ECE8DF"/>
@@ -322,16 +335,20 @@ with tab_single:
         )[0]
 
     with preview_shell:
-        components.html(
-            render_section_svg(
-                b_mm=b_mm,
-                d_mm=d_mm,
-                n_bars=n_bars,
-                bar_diameter_mm=bar_diameter_mm,
-                af_mm2=Af_mm2,
-                mode_label=af_mode,
+        st.markdown(
+            (
+                '<div class="section-figure-shell">'
+                + render_section_svg(
+                    b_mm=b_mm,
+                    d_mm=d_mm,
+                    n_bars=n_bars,
+                    bar_diameter_mm=bar_diameter_mm,
+                    af_mm2=Af_mm2,
+                    mode_label=af_mode,
+                )
+                + "</div>"
             ),
-            height=400,
+            unsafe_allow_html=True,
         )
         result = st.session_state.get("single_prediction_result")
         if result is not None:

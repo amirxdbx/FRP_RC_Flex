@@ -344,9 +344,6 @@ with tab_single:
             out2.metric("Failure Mode", result["predicted_failure_mode"])
             out3.metric(r"$p_{\mathrm{FR}}$", f"{result['p_fr']:.3f}")
 
-            st.subheader("Detailed Outputs")
-            st.dataframe(pd.DataFrame([result]), use_container_width=True)
-
 with tab_batch:
     st.write(
         "Upload a CSV with columns `b_mm,d_mm,fc_MPa,Af_mm2,Ef_GPa,ffu_MPa` "

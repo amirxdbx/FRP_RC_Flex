@@ -193,117 +193,116 @@ with tab_single:
     input_col, preview_shell = st.columns([1.15, 0.85], gap="large")
 
     with input_col:
-        with st.form("single_predict_form", border=False):
-            st.markdown('<div class="section-label">Geometry</div>', unsafe_allow_html=True)
-            st.markdown(
-                '<p class="section-note">Define the beam cross-section used by the predictor.</p>',
-                unsafe_allow_html=True,
+        st.markdown('<div class="section-label">Geometry</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<p class="section-note">Define the beam cross-section used by the predictor.</p>',
+            unsafe_allow_html=True,
+        )
+        g1, g2 = st.columns(2)
+        with g1:
+            b_mm = st.number_input(
+                "Beam width, b (mm)",
+                min_value=1.0,
+                value=DEFAULT_INPUTS["b_mm"],
+                step=1.0,
+                help="Section width measured in millimetres.",
             )
-            g1, g2 = st.columns(2)
-            with g1:
-                b_mm = st.number_input(
-                    "Beam width, b (mm)",
-                    min_value=1.0,
-                    value=DEFAULT_INPUTS["b_mm"],
-                    step=1.0,
-                    help="Section width measured in millimetres.",
-                )
-            with g2:
-                d_mm = st.number_input(
-                    "Effective depth, d (mm)",
-                    min_value=1.0,
-                    value=DEFAULT_INPUTS["d_mm"],
-                    step=1.0,
-                    help="Distance from compression face to FRP reinforcement centroid.",
-                )
-
-            st.markdown('<div class="section-label">Reinforcement</div>', unsafe_allow_html=True)
-            st.markdown(
-                '<p class="section-note">Provide FRP area directly or derive it from bar count and bar diameter.</p>',
-                unsafe_allow_html=True,
-            )
-            af_mode = st.radio(
-                "Reinforcement input mode",
-                options=["Direct Af", "Bar count + diameter"],
-                horizontal=True,
-                label_visibility="collapsed",
+        with g2:
+            d_mm = st.number_input(
+                "Effective depth, d (mm)",
+                min_value=1.0,
+                value=DEFAULT_INPUTS["d_mm"],
+                step=1.0,
+                help="Distance from compression face to FRP reinforcement centroid.",
             )
 
-            if af_mode == "Direct Af":
-                r1, r2 = st.columns([1.25, 1.0])
-                with r1:
-                    Af_mm2 = st.number_input(
-                        "FRP reinforcement area, Af (mm²)",
-                        min_value=1.0,
-                        value=DEFAULT_INPUTS["Af_mm2"],
-                        step=1.0,
-                    )
-                with r2:
-                    viz_bars_direct = st.number_input(
-                        "Bars shown in preview",
+        st.markdown('<div class="section-label">Reinforcement</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<p class="section-note">Provide FRP area directly or derive it from bar count and bar diameter.</p>',
+            unsafe_allow_html=True,
+        )
+        af_mode = st.radio(
+            "Reinforcement input mode",
+            options=["Direct Af", "Bar count + diameter"],
+            horizontal=True,
+            label_visibility="collapsed",
+        )
+
+        if af_mode == "Direct Af":
+            r1, r2 = st.columns([1.25, 1.0])
+            with r1:
+                Af_mm2 = st.number_input(
+                    "FRP reinforcement area, Af (mm²)",
+                    min_value=1.0,
+                    value=DEFAULT_INPUTS["Af_mm2"],
+                    step=1.0,
+                )
+            with r2:
+                viz_bars_direct = st.number_input(
+                    "Bars shown in preview",
+                    min_value=1,
+                    max_value=12,
+                    value=DEFAULT_INPUTS["viz_bars_direct"],
+                    step=1,
+                    help="Only used to draw an equivalent layout in the section preview.",
+                )
+            n_bars = int(viz_bars_direct)
+            bar_diameter_mm = equivalent_bar_diameter(Af_mm2, n_bars)
+            st.caption(
+                f"Equivalent preview layout: {n_bars} bars with diameter {bar_diameter_mm:.2f} mm."
+            )
+        else:
+            r1, r2, r3 = st.columns([0.9, 1.1, 1.0])
+            with r1:
+                n_bars = int(
+                    st.number_input(
+                        "Number of bars",
                         min_value=1,
                         max_value=12,
-                        value=DEFAULT_INPUTS["viz_bars_direct"],
+                        value=DEFAULT_INPUTS["n_bars"],
                         step=1,
-                        help="Only used to draw an equivalent layout in the section preview.",
                     )
-                n_bars = int(viz_bars_direct)
-                bar_diameter_mm = equivalent_bar_diameter(Af_mm2, n_bars)
-                st.caption(
-                    f"Equivalent preview layout: {n_bars} bars with diameter {bar_diameter_mm:.2f} mm."
                 )
-            else:
-                r1, r2, r3 = st.columns([0.9, 1.1, 1.0])
-                with r1:
-                    n_bars = int(
-                        st.number_input(
-                            "Number of bars",
-                            min_value=1,
-                            max_value=12,
-                            value=DEFAULT_INPUTS["n_bars"],
-                            step=1,
-                        )
-                    )
-                with r2:
-                    bar_diameter_mm = st.number_input(
-                        "Bar diameter (mm)",
-                        min_value=1.0,
-                        value=DEFAULT_INPUTS["bar_diameter_mm"],
-                        step=0.1,
-                    )
-                Af_mm2 = area_from_bar_layout(n_bars, bar_diameter_mm)
-                with r3:
-                    st.metric("Computed Af", f"{Af_mm2:.2f} mm²")
+            with r2:
+                bar_diameter_mm = st.number_input(
+                    "Bar diameter (mm)",
+                    min_value=1.0,
+                    value=DEFAULT_INPUTS["bar_diameter_mm"],
+                    step=0.1,
+                )
+            Af_mm2 = area_from_bar_layout(n_bars, bar_diameter_mm)
+            with r3:
+                st.metric("Computed Af", f"{Af_mm2:.2f} mm²")
 
-            st.markdown('<div class="section-label">Material Properties</div>', unsafe_allow_html=True)
-            st.markdown(
-                '<p class="section-note">Specify the concrete and FRP mechanical properties.</p>',
-                unsafe_allow_html=True,
+        st.markdown('<div class="section-label">Material Properties</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<p class="section-note">Specify the concrete and FRP mechanical properties.</p>',
+            unsafe_allow_html=True,
+        )
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            fc_MPa = st.number_input(
+                "Concrete strength, f'c (MPa)",
+                min_value=1.0,
+                value=DEFAULT_INPUTS["fc_MPa"],
+                step=0.1,
             )
-            m1, m2, m3 = st.columns(3)
-            with m1:
-                fc_MPa = st.number_input(
-                    "Concrete strength, f'c (MPa)",
-                    min_value=1.0,
-                    value=DEFAULT_INPUTS["fc_MPa"],
-                    step=0.1,
-                )
-            with m2:
-                Ef_GPa = st.number_input(
-                    "FRP modulus, Ef (GPa)",
-                    min_value=1.0,
-                    value=DEFAULT_INPUTS["Ef_GPa"],
-                    step=0.1,
-                )
-            with m3:
-                ffu_MPa = st.number_input(
-                    "FRP tensile strength, ffu (MPa)",
-                    min_value=1.0,
-                    value=DEFAULT_INPUTS["ffu_MPa"],
-                    step=1.0,
-                )
+        with m2:
+            Ef_GPa = st.number_input(
+                "FRP modulus, Ef (GPa)",
+                min_value=1.0,
+                value=DEFAULT_INPUTS["Ef_GPa"],
+                step=0.1,
+            )
+        with m3:
+            ffu_MPa = st.number_input(
+                "FRP tensile strength, ffu (MPa)",
+                min_value=1.0,
+                value=DEFAULT_INPUTS["ffu_MPa"],
+                step=1.0,
+            )
 
-            submitted = st.form_submit_button("Predict Capacity", type="primary", use_container_width=True)
+        submitted = st.button("Predict Capacity", type="primary", use_container_width=True)
 
     if submitted:
         st.session_state["single_prediction_result"] = predictor.predict_records(

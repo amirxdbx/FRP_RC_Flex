@@ -18,6 +18,15 @@ st.set_page_config(page_title="FRP-RC PINN Predictor", page_icon="📐", layout=
 st.title("FRP-RC PINN Predictor")
 st.caption("Predict flexural capacity and CC/FR failure tendency using the trained physics-informed model.")
 
+DEFAULT_INPUTS = {
+    "b_mm": 200.0,
+    "d_mm": 254.0,
+    "fc_MPa": 39.6,
+    "Af_mm2": 393.0,
+    "Ef_GPa": 48.7,
+    "ffu_MPa": 995.0,
+}
+
 
 @st.cache_resource
 def load_predictor():
@@ -42,14 +51,14 @@ tab_single, tab_batch = st.tabs(["Single Prediction", "Batch CSV"])
 with tab_single:
     col1, col2, col3 = st.columns(3)
     with col1:
-        b_mm = st.number_input("b_mm", min_value=1.0, value=189.4, step=1.0)
-        d_mm = st.number_input("d_mm", min_value=1.0, value=265.9, step=1.0)
+        b_mm = st.number_input("b_mm", min_value=1.0, value=DEFAULT_INPUTS["b_mm"], step=1.0)
+        d_mm = st.number_input("d_mm", min_value=1.0, value=DEFAULT_INPUTS["d_mm"], step=1.0)
     with col2:
-        fc_MPa = st.number_input("fc_MPa", min_value=1.0, value=43.27, step=0.1)
-        Af_mm2 = st.number_input("Af_mm2", min_value=1.0, value=449.48, step=1.0)
+        fc_MPa = st.number_input("fc_MPa", min_value=1.0, value=DEFAULT_INPUTS["fc_MPa"], step=0.1)
+        Af_mm2 = st.number_input("Af_mm2", min_value=1.0, value=DEFAULT_INPUTS["Af_mm2"], step=1.0)
     with col3:
-        Ef_GPa = st.number_input("Ef_GPa", min_value=1.0, value=57.98, step=0.1)
-        ffu_MPa = st.number_input("ffu_MPa", min_value=1.0, value=1015.47, step=1.0)
+        Ef_GPa = st.number_input("Ef_GPa", min_value=1.0, value=DEFAULT_INPUTS["Ef_GPa"], step=0.1)
+        ffu_MPa = st.number_input("ffu_MPa", min_value=1.0, value=DEFAULT_INPUTS["ffu_MPa"], step=1.0)
 
     if st.button("Predict", type="primary"):
         result = predictor.predict_records(

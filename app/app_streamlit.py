@@ -110,8 +110,8 @@ def render_section_svg(
     af_mm2: float,
     mode_label: str,
 ) -> str:
-    width = 550
-    height = 375
+    width = 550*1.25
+    height = 375*1.25
     margin_x = 70
     margin_y = 28
     max_section_w = 400

@@ -110,12 +110,12 @@ def render_section_svg(
     af_mm2: float,
     mode_label: str,
 ) -> str:
-    width = 440
-    height = 300
-    margin_x = 56
-    margin_y = 22
-    max_section_w = 320
-    max_section_h = 232
+    width = 550
+    height = 375
+    margin_x = 70
+    margin_y = 28
+    max_section_w = 400
+    max_section_h = 290
 
     # Scale the sketch to the actual b:d proportion instead of forcing
     # every section into the same rectangle.
@@ -190,7 +190,7 @@ predictor = load_predictor()
 tab_single, tab_batch = st.tabs(["Single Prediction", "Batch CSV"])
 
 with tab_single:
-    input_col, preview_shell = st.columns([1.15, 0.85], gap="large")
+    input_col, preview_shell = st.columns([1.15, 0.95], gap="large")
 
     with input_col:
         st.markdown('<div class="section-label">Geometry</div>', unsafe_allow_html=True)
@@ -332,7 +332,7 @@ with tab_single:
                 af_mm2=Af_mm2,
                 mode_label=af_mode,
             ),
-            height=320,
+            height=400,
         )
         result = st.session_state.get("single_prediction_result")
         if result is not None:
